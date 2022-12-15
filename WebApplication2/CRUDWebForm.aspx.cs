@@ -18,14 +18,14 @@ namespace WebApplication2
             {
                 ShowData();
             }
-            
-          
+
+
 
         }
         private void ShowData()
         {
             //SqlCommand command = new SqlCommand("Select * from student", connection);
-           
+
 
             SqlCommand cmd = new SqlCommand();
             cmd.CommandText = "studentinsert"; //store procedure name 
@@ -41,14 +41,14 @@ namespace WebApplication2
             //cmd.Parameters.Add(new SqlParameter("@Desc7", mDesc7));
             //cmd.Parameters.Add(new SqlParameter("@Desc8", mDesc8));
             //cmd.Parameters.Add(new SqlParameter("@Desc9", mDesc9));
-            
+
             connection.Open();
             SqlDataAdapter adp = new SqlDataAdapter();
             adp.SelectCommand = cmd;
             cmd.Connection = connection;
             cmd.ExecuteNonQuery();
             connection.Close();
-            
+
             DataSet ds = new DataSet();
             adp.Fill(ds);
             GridView1.DataSource = ds;
@@ -58,7 +58,7 @@ namespace WebApplication2
 
         protected void submit1_Click(object sender, EventArgs e)
         {
-            
+
             string mDesc1 = txtname.Text;
             string mDesc2 = txtfathertname.Text;
             string mDesc3 = txtmothername.Text;
@@ -66,7 +66,7 @@ namespace WebApplication2
             string mDesc5;
             string mDesc6;
             string mDesc7 = txtnumber.Text;
-            string mDesc8 = txtdob.Value ;
+            string mDesc8 = txtdob.Value;
             string ID = hdnIDx.Text;
 
             if (rbtnmale.Checked)
@@ -190,17 +190,17 @@ namespace WebApplication2
             //-----------------------------
 
 
-            DataTable dt = (DataTable)Session["tblstudent"]; //parseing
+            DataTable dt = (DataTable)Session["tblstudent"]; //parseing // session theke niye ashse not from databse
             DataRow[] dr = dt.Select("id=" + sid);
 
             this.txtname.Text = dr[0]["name"].ToString();
             this.txtfathertname.Text = dr[0]["fathername"].ToString();
             this.txtmothername.Text = dr[0]["mothername"].ToString();
             this.txtdistrict.Text = dr[0]["district"].ToString();
-            string gender  = dr[0]["gender"].ToString();
-            if (gender=="Male")
+            string gender = dr[0]["gender"].ToString();
+            if (gender == "Male")
             {
-                
+
                 this.rbtnmale.Checked = true;
             }
             else if (gender == "Female")
@@ -234,7 +234,7 @@ namespace WebApplication2
                 this.rbtdevorced.Checked = false;
             }
 
-         
+
             this.txtnumber.Text = dr[0]["phone"].ToString();
             this.txtdob.Value = dr[0]["dob"].ToString();
             this.hdnIDx.Text = dr[0]["id"].ToString();
@@ -273,5 +273,107 @@ namespace WebApplication2
             //SqlDataReader mydata = command.ExecuteReader();
             //connection.Close();
         }
+
+        protected void GridView1_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            GridView1.EditIndex = e.NewEditIndex;
+            BindData();
+        }
+
+        protected void GridView1_RowDeleting(object sender, GridViewDeleteEventArgs e)
+        {
+            DataTable dt = (DataTable)Session["tblstudent"];
+
+            int rowindex = (this.GridView1.PageSize) * (this.GridView1.PageIndex) + e.RowIndex;
+            string sid = ((Label)this.GridView1.Rows[rowindex].FindControl("id")).Text.ToString(); //find the row id
+
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandText = "studentinsert"; //store procedure name 
+            cmd.CommandType = CommandType.StoredProcedure;  //store procedure type
+            cmd.Parameters.Add(new SqlParameter("@CallType", "DELETEDATA"));
+            cmd.Parameters.Add(new SqlParameter("@Desc1", sid));
+
+            connection.Open();
+            SqlDataAdapter adp = new SqlDataAdapter();
+            adp.SelectCommand = cmd;
+            cmd.Connection = connection;
+            int result = cmd.ExecuteNonQuery();
+            connection.Close();
+
+            if (result != null)
+            {
+                dt.Rows[rowindex].Delete();
+
+                DataView dv = dt.DefaultView;
+                Session.Remove("tblstudent");
+                Session["tblstudent"] = dv.ToTable();
+                this.BindData();
+            }
+        }
+
+        protected void GridView1_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            GridView1.EditIndex = -1;
+            BindData();
+        }
+
+        protected void GridView1_RowUpdating(object sender, GridViewUpdateEventArgs e)
+        {
+
+            string mDesc1 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvname")).Text.Trim();
+            string mDesc2 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvfathertname")).Text.Trim();
+            string mDesc3 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvmothername")).Text.Trim();
+            string mDesc4 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvdistrict")).Text.Trim();
+            string mDesc5 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvgender")).Text.Trim();
+            string mDesc6 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvmarriedstatus")).Text.Trim();
+            string mDesc7 = ((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvnumber")).Text.Trim();
+            string mDesc8 = ""; //((TextBox)GridView1.Rows[e.RowIndex].FindControl("txtgvdob")).Text.Trim(); 
+            string ID = ((Label)GridView1.Rows[e.RowIndex].FindControl("id")).Text.Trim();
+
+
+            if (ID.Length > 0)
+            {
+                SqlCommand cmd = new SqlCommand();
+                cmd.CommandText = "studentinsert"; //store procedure name 
+                cmd.CommandType = CommandType.StoredProcedure;  //store procedure type
+                cmd.Parameters.Add(new SqlParameter("@CallType", "UPDATEDATA"));
+                cmd.Parameters.Add(new SqlParameter("@Desc1", mDesc1));
+                cmd.Parameters.Add(new SqlParameter("@Desc2", mDesc2));
+                cmd.Parameters.Add(new SqlParameter("@Desc3", mDesc3));
+                cmd.Parameters.Add(new SqlParameter("@Desc4", mDesc4));
+                cmd.Parameters.Add(new SqlParameter("@Desc5", mDesc5));
+                cmd.Parameters.Add(new SqlParameter("@Desc6", mDesc6));
+                cmd.Parameters.Add(new SqlParameter("@Desc7", mDesc7));
+                cmd.Parameters.Add(new SqlParameter("@Desc8", mDesc8));
+                cmd.Parameters.Add(new SqlParameter("@Desc9", ID));
+
+
+                connection.Open();
+                SqlDataAdapter adp = new SqlDataAdapter();
+                adp.SelectCommand = cmd;
+                cmd.Connection = connection;
+                cmd.ExecuteNonQuery();
+                connection.Close();
+
+                GridView1.EditIndex = -1;
+                BindData();
+                ShowData();
+
+            }
+
+        }
+
+        protected void GridView1_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            GridView1.PageIndex = e.NewPageIndex;
+            BindData();
+        }
+
+        private void BindData()
+        {
+            GridView1.DataSource = Session["tblstudent"];
+            GridView1.DataBind();
+        }
+
     }
 }
